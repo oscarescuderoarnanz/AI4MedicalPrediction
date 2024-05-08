@@ -29,7 +29,6 @@
 
 [url-moor2023]: https://pubmed.ncbi.nlm.nih.gov/37588623/
 [url-moor2023-sm]: https://ars.els-cdn.com/content/image/1-s2.0-S2589537023003012-mmc1.pdf
-
 [url-moor2023-github]: https://github.com/BorgwardtLab/multicenter-sepsis
 
 | Name | Website | Docs | Other |
@@ -41,7 +40,7 @@
 
 Excellent study on 'Predicting sepsis using deep learning across international sites: a retrospective development 
 and validation study' from Michael Moor et al, published in eClinicalMedicine, 2023 ([Article][url-moor2023], 
-[Supplementary Material][url-moor2023-sm])
+[Supplementary Material][url-moor2023-sm], [Repository][url-moor2023-github])
 
 #### MIMIMC
 #### HiRID
