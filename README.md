@@ -29,6 +29,8 @@
 
 [url-moor2023]: https://pubmed.ncbi.nlm.nih.gov/37588623/
 
+[url-moor2023-github]: https://github.com/BorgwardtLab/multicenter-sepsis
+
 | Name | Website | Docs | Other |
 | ---    | --- | --- | --- | 
 | MIMIC  | [Physionet][url-mimic-physionet] | -- | [Article (description)][url-mimic-nature] |
