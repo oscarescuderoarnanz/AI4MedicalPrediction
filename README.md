@@ -28,6 +28,7 @@
 [url-aumcdb-sepsis3-article]: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9650242/
 
 [url-moor2023]: https://pubmed.ncbi.nlm.nih.gov/37588623/
+[url-moor2023-sm]: https://ars.els-cdn.com/content/image/1-s2.0-S2589537023003012-mmc1.pdf
 
 [url-moor2023-github]: https://github.com/BorgwardtLab/multicenter-sepsis
 
@@ -39,7 +40,8 @@
 | AUMCdb | [Website][url-aumcdb] | -- | [Link][url-aumcdb-documentation] |
 
 Excellent study on 'Predicting sepsis using deep learning across international sites: a retrospective development 
-and validation study' from Michael Moor et al, published in eClinicalMedicine, 2023 ([link][url-moor2023])
+and validation study' from Michael Moor et al, published in eClinicalMedicine, 2023 ([Article][url-moor2023], 
+[Supplementary Material][url-moor2023-sm])
 
 #### MIMIMC
 #### HiRID
