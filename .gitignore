@@ -1,1 +1,4 @@
 datasets/**
+processDatasets/dataProcessed
+processDatasets/icu-files-processed
+0_data/splits/**
