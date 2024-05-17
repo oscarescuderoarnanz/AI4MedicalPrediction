@@ -1,4 +1,13 @@
+<<<<<<< HEAD
 datasets/**
 processDatasets/dataProcessed
 processDatasets/icu-files-processed
 0_data/splits/**
+=======
+.DS_Store
+.idea
+__pycache__
+
+
+datasets/**
+>>>>>>> 2e314415557c5b25705b2974644875f505276ee9
