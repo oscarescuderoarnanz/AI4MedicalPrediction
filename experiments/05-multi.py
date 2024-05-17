@@ -1,9 +1,8 @@
 # Libraries
 import pandas as pd
 
-# Own
-import settings
-import utils
+from utils import settings
+from utils import prep
 
 #
 print(settings.DATAPATH)
@@ -15,8 +14,8 @@ print(settings.DATAPATH)
 db = 'eicu_demo_0.5.6.parquet'
 
 
-print(utils.sep(a=2))
-print(utils.sepsis(a=2, b=3, c=4))
+print(prep.sep(a=2))
+print(prep.sepsis(a=2, b=3, c=4))
 
 # ----------------------------------------------------
 # Load data
