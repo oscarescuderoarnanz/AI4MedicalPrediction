@@ -1,3 +1,7 @@
+processDatasets/dataProcessed
+processDatasets/icu-files-processed
+0_data/splits/**
+
 .DS_Store
 .idea
 __pycache__
