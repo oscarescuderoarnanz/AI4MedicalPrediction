@@ -48,7 +48,6 @@ def slidingWindow(df, moving_span, window_length):
         iterations = int(np.ceil((df_patient.shape[0] - (window_length)+1) / moving_span))
         for j in range(iterations):
             df_aux = df_patient[moving_span*j: (window_length + moving_span*j)]
-            print(df_aux.shape)
             df_aux['w_id'] = str(id_pat) + "_" + str(j)
             df_sw = pd.concat([df_sw, df_aux],ignore_index=True)
  
@@ -56,16 +55,34 @@ def slidingWindow(df, moving_span, window_length):
  
     return df_sw_ttl
  
- 
+
 def filter_windows(df, N, M):
     w = []
+    
     for stay_id, group in df.groupby('stay_id'):
         group = group.reset_index(drop=True)
-        sep_onset_indices = group.index[group['sep_onset'] == 1].tolist()
+        sep_onset_indices = group[group['sep_onset'] == 1].index.tolist()
+        
+        # Obtener todos los w_id únicos en el grupo
+        unique_w_ids = group['w_id'].unique()
+        
         for idx in sep_onset_indices:
-            start_idx = max(idx - N, 0)
-            end_idx = min(idx + M + 1, len(group))
-            w.append(group.iloc[start_idx:end_idx])
+            onset_w_id = group.loc[idx, 'w_id']
+            
+            # Extraer la parte numérica del w_id para la comparación
+            onset_w_id_num = int(onset_w_id.split('_')[1])
+            
+            # Calcular los rangos de w_id
+            start_w_id_num = onset_w_id_num - N
+            end_w_id_num = onset_w_id_num + M
+            
+            # Filtrar los w_id que están en el rango deseado
+            valid_w_ids = [f"{onset_w_id.split('_')[0]}_{i}" for i in range(start_w_id_num, end_w_id_num + 1)]
+            
+            # Filtrar las filas en el rango de w_id
+            filtered_group = group[group['w_id'].isin(valid_w_ids)]
+            w.append(filtered_group)
+    
     return pd.concat(w, ignore_index=True)
  
  

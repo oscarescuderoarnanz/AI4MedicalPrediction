@@ -54,12 +54,10 @@ def preprocessing(params, sep_def, debug=False):
         df_final = utils.LVCF(df_final)
         df_final = df_final.fillna(0)
         print("# of patients post imputation:", len(df_final.stay_id.unique()))
-
-        # Calculate the minimum number of timeSteps for any patient in the dataset
-    print(params['min_length_pat'])
+    
     if params['min_length_pat'] == 0:
         min_length_pat = df_final.groupby("stay_id").size().reset_index()[0].min()
-    print(min_length_pat)
+    
     params['min_length_pat'] = min_length_pat
     df_final.stay_id = df_final.stay_id.astype(int)
  
