@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
- 
+import matplotlib.pyplot as plt
+
 import warnings
 warnings.filterwarnings("ignore")
  
@@ -23,11 +24,11 @@ def preprocessing(params, sep_def, debug=False):
     if params["filter_pat"]:
         pats = df[df.sep_onset == 1].stay_id.unique()
         df = df[df.stay_id.isin(pats)]
-     
+
     # Step -1. Select data of ICU
     df_icu_entry = df[df.stay_time >= 0].reset_index(drop=True)
     print("# of icu-patients:", len(df_icu_entry.stay_id.unique()))
- 
+
     if debug:
         print("% of missing values (pre-filter):", np.round((df.isnull().sum().sum() / \
                                                              (df.shape[0]*df.shape[1])*100), 4))
@@ -36,21 +37,46 @@ def preprocessing(params, sep_def, debug=False):
         print("# of patients labels:", len(df_icu_entry.stay_id.unique()))
         print("% of missing values post remove patients with nan label:", np.round((df_icu_entry.isnull().sum().sum() / \
                                                              (df_icu_entry.shape[0]*df_icu_entry.shape[1])*100), 4))
- 
-    # ## Step 1. Select relevant features. Remove feature without data, based on threshold.
+
+
+
+    ## Step 1. Select relevant features. Remove feature without data, based on threshold.
     df_final = df_icu_entry[params['keys']]
-    missing_percentage = df_final.isnull().mean() * 100
-    feats = missing_percentage[missing_percentage > params['thr_nan']].index.tolist()
- 
+
+    ## Step 2. Filter patients in based on theirs information
+    counts = df_final.groupby('stay_id').count()
+    total_values = df_final.groupby('stay_id').size()
+    percentages_all_features = counts.div(total_values, axis=0)
+
+    counts = df_final.groupby('stay_id').count().sum(axis=1)
+    total_values = df_final.groupby('stay_id').size()  * df_final.shape[1]
+    percentages = (counts / total_values) * 100
+    percentages.name = 'total_percentage'
+    percentage_values = pd.DataFrame(percentages).reset_index()
+
+    df_per_with_values = pd.merge(percentages_all_features, percentage_values, how="left", on="stay_id")
+    print("# of patients pre filter by information:", len(df_per_with_values.stay_id.unique()))
+    pats = df_per_with_values[df_per_with_values.total_percentage > params["th"]].stay_id.unique()
+    print("# of patients post filter by information:", len(pats))
+    df_final = df_final[df_final.stay_id.isin(pats)]
+    
     if debug:
-        print("Features with more than " + str(params['thr_nan']) + "% missing data:" +  str(len(feats)))
-        print("# of patients:", len(df_final.stay_id.unique()))
-        print("Dimensiones of dataset:", df_final.shape)
- 
-#     df_filter = df_final.drop(feats, axis=1)
-#     df_final = df_filter.astype(float)
- 
-    print("Dimensions post remove some feautures:", df_final.shape)
+        
+        keys_to_anal = ['sofa', 'hr_raw', 'o2sat_raw', 'temp_raw', 'sbp_raw',
+                  'dbp_raw', 'map_raw', 'resp_raw', 'fio2_raw', 'po2_raw',
+                  'bili_raw', 'plt_raw', 'crea_raw', 'sirs', 'news', 'mews',
+                 'SI']
+            
+        values = df_per_with_values[keys_to_anal].median(axis=0).values
+        keys = list(df_per_with_values[keys_to_anal].median(axis=0).keys())
+
+        plt.figure(figsize=(8,4))
+        plt.bar(keys, values)
+        plt.xticks(rotation=90)
+        plt.grid()
+        plt.show()
+
+        print("Dimensions post remove some feautures:", df_final.shape)
  
     if params['imputationType'] == "LVCF":
         df_final = utils.LVCF(df_final)
