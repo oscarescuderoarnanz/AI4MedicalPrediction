@@ -1,6 +1,7 @@
 processDatasets/dataProcessed
 processDatasets/icu-files-processed
-0_Data/splits/**
+Data/splits/**
+Data/*.parquet
 
 .DS_Store
 .idea
