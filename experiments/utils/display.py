@@ -12,6 +12,12 @@ def plot_history(data):
              axes = data.plot(x='epoch', subplots=subplots,
                 layout=(rows, cols), figsize=(15, 4),
                 colormap='viridis')
+
+    Parameters
+    ----------
+
+    Returns
+    -------
     """
 
     def get_metric_names(names):
@@ -51,7 +57,14 @@ def plot_history(data):
 
 
 def plot_confusion_matrix(cm, labels=None, width=3, height=2):
-    """Display confusion matrix"""
+    """Display confusion matrix
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    """
     # Libraries
     import numpy as np
     import matplotlib.pyplot as plt
@@ -83,6 +96,9 @@ def plot_patient_stay(m,
     xticklabels: array
     yticklabels: array
     colormaps: array
+
+    Returns
+    -------
     """
     # Libraries
     import numpy as np
@@ -93,7 +109,8 @@ def plot_patient_stay(m,
     T, F = m.shape
 
     # Create random matrix
-    m = np.transpose(np.random.rand(T, F))
+    #m = np.transpose(np.random.rand(T, F))
+    m = np.round(m.T, decimals=1)
 
     # Create parameters if not defined
     if xticklabels is None:
@@ -107,6 +124,7 @@ def plot_patient_stay(m,
     f, axs = plt.subplots(m.shape[0], 1,
         figsize=(T*0.5, F*0.5), sharex=True)
 
+    # Display
     for r in range(m.shape[0]):
         sns.heatmap([m[r,:]],
             yticklabels=[yticklabels[r]],
@@ -115,6 +133,8 @@ def plot_patient_stay(m,
             linewidth=.5, annot_kws={"fontsize": 6}, cbar=False,
             square=True)
         axs[r].set_yticklabels([yticklabels[r]], rotation=0),
+        axs[r].yaxis.grid(True, linestyle='dashed', color='gray')
+        axs[r].set_axisbelow(True)
 
     """
     
@@ -147,6 +167,8 @@ def plot_patient_stay(m,
 
     # Return
     return f, axs
+
+
 
 
 

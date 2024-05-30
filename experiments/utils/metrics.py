@@ -87,6 +87,4 @@ def custom_metrics_binary_clf(model, X, y):
 if __name__ == '__main__':
 
     # Libraries
-
-    # Test/Va.
-    metric_oscar()
+    print("Main not implemented!")
