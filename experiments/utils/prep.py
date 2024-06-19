@@ -24,6 +24,101 @@ def bsi(args, **kwargs):
     """"""
     return bloodstream_infection(*args, **kwargs)
 
+def suspected_infection(x, strategy='basic', **kwargs):
+    """Computes whether there is suspected infection.
+
+    Possible elements to define suspected infection:
+      - antibiotics have been prescribed
+      - blood fluid cultures sampled
+      - use of vasopressors
+
+    Parameters
+    ----------
+    x: pd.DataFrame
+        The DataFrame with information to compute the suspected infection.
+        It must include the following
+    strategy: str
+        The strategy to use to compute the suspected infection. The
+        options are:
+            - basic
+            - si_persson_2021
+            - si_lin_2021
+            - si_valik_2023
+    **kwargs:
+        Parameter to pass depending on the strategy selected.
+
+    Returns
+    -------
+    """
+    if strategy == 'basic':
+        return si_basic(x, **kwargs)
+    elif strategy == 'lin_2021':
+        return si_lin2021(x, **kwargs)
+    elif strategy == 'persson_2021':
+        return si_persson2021(x, **kwargs)
+    elif strategy == 'valik_2023':
+        return si_valik2023(x, **kwargs)
+    else:
+        print("ERROR!")
+
+def bacteremia():
+    """Computes bacteremia.
+    """
+    pass
+
+def bloodstream_infection():
+    """Computes blood stream infection.
+    """
+    pass
+
+def sepsis(x, delta_sofa=2, prop=None):
+    """Computes sepsis onset.
+
+    .. note: Sepsis onset defined as increase in sofa > 2
+             and suspicion of infection.
+
+    SEPSIS-1: SIRS
+    SEPSIS-2: SIRS + SI
+    SEPSIS-3: SOFA + SI
+
+    Possible elements to define sepsis:
+       - ICD-10: codes
+       - ICD-9: 995.91 (sepsis) | 995.92 (severe sepsis) | 785.52 (septic shock)
+       - delta_sofa > 2 and suspected infection
+
+    SI: Suspected Infection
+
+    Parameters
+    ----------
+    x: pd.DataFrame
+        The DataFrame with the information.
+    delta_sofa: number
+        The increase in consecutive sofas.
+    prop: tuple
+        The propagation
+
+    Returns
+    -------
+    """
+    # Libraries
+    import pandas as pd
+    import numpy as np
+
+    # Basic checks
+    if not 'sofa' in x or not 'si':
+        print("Raise warning!")
+
+    # Compute delta sofa.
+    dsofa = pd.Series(x.sofa.diff(), name='dsofa')
+    # Compute sepsis onset
+    onset = pd.Series(np.nan, index=x.index, name='sep_onset')
+    onset[(dsofa >= delta_sofa) & x.si] = 1
+    # Compute propagation
+    if prop is not None:
+        extnd = propagate(onset, prop[0], prop[1])
+        return pd.concat([dsofa, onset, extnd], axis=1)
+    # Return
+    return pd.concat([dsofa, onset], axis=1)
 
 # ----------------------------------
 # Helper methods
@@ -68,14 +163,26 @@ def propagate(x, bck=0, fwd=0, force=False):
 
 
 # --------------------------------------------------------------
-#
+# Suspected infection
 # --------------------------------------------------------------
 # The methods included in this section should be related with
 # the creation of hand-crafted features (e.g. PaO2/fiO2) and/or
 # any complex labels (e.g. bacteremia, sepsis, ...)
 
 def si_basic(x, prop=None):
-    """Suspected infection (just abxs)"""
+    """Suspected infection (just abxs)
+
+    Suspected infection is defined as the presence of antimicrobial.
+
+    Parameters
+    ----------
+    x: pd.DataFrame
+        The dataframe
+    prop: tuple
+        The tuple with back/forward propagation
+    Returns
+    -------
+    """
     # Check required columns
     if not 'abx' in x:
         print("Raise warning or error!")
@@ -85,18 +192,6 @@ def si_basic(x, prop=None):
         c = propagate(c, prop[0], prop[1])
     return c
 
-def si_moor_2023_aux(x, bck_abx, fwd_abx, bck_si, fwd_si, **kwargs):
-    """Suspected infection.
-
-    .. note:: The eICU dataset reports only a small number of body fluid
-              samplings, while the HiRID dataset reports no body fluid
-              samplings at all. For this reason, the original definition
-              of suspected infection is hard to implement on these datasets.
-
-    The alternative suspected infection was defined as a co-occurrence of
-    multiple antibiotic administrations.
-    """
-    pass
 
 def si_moor2023(x, bck_abx=0, fwd_abx=24,
                    bck_smp=0, fwd_smp=72,
@@ -106,6 +201,11 @@ def si_moor2023(x, bck_abx=0, fwd_abx=24,
     .. note:: Only detects one suspected infection (SI) event (first) during
               the whole stay! Would it be possible to define possible scenarios
               in which subsequent events happen?
+
+    .. note:: The eICU dataset reports only a small number of body fluid
+              samplings, while the HiRID dataset reports no body fluid
+              samplings at all. For this reason, the original definition
+              of suspected infection is hard to implement on these datasets.
 
     Suspected infection was defined as co-occurrence of antibiotic treatment
     and body fluid sampling. If antibiotic treatment occurred first, it needed
@@ -118,6 +218,21 @@ def si_moor2023(x, bck_abx=0, fwd_abx=24,
 
     Parameters
     ----------
+    x: pd.DataFrame
+        The DataFrame with the information. It needs to have the columns
+        <abx> and <smp>.
+    bck_abx: integer
+        Backward propagation of abx.
+    fwd_abx: integer
+        Forward propagation of abx.
+    bck_smp: integer
+        Backward propagation of smp.
+    fwd_smp: integer
+        Forward propagation of fwd.
+    bck_si: integer
+        Backward propagation of bck.
+    fwd_si: integer
+        Forward propagation of fwd.
 
     Returns
     -------
@@ -241,51 +356,6 @@ def si_valik2023(x):
     pass
 
 
-def suspected_infection(x, strategy='basic', **kwargs):
-    """Computes whether there is suspected infection.
-
-    .. note: Whether abxs were applied.
-    .. note: Whether cultures were requested.
-
-    Possible elements to define suspected infection:
-      - antibiotics have been prescribed &
-      - blood fluid cultures applied (vasopressors?)
-      - culture order within 24h after antibiotics
-      -
-
-
-    Parameters
-    ----------
-    x: pd.DataFrame
-        The DataFrame with information to compute the suspected infection.
-        It must include the following
-    strategy: str
-        The strategy to use to compute the suspected infection. The
-        options are:
-            - basic:
-            - si_persson_2021
-            - si_lin_2021
-            - si_valik_2023
-    prop: tuple
-        The number of time steps to propagate the label.
-        In order to avoid any propagation, the parameter
-        must be None.
-
-    Returns
-    -------
-    """
-    if strategy == 'basic':
-        return si_basic(x, **kwargs)
-    elif strategy == 'lin_2021':
-        return si_lin2021(x, **kwargs)
-    elif strategy == 'persson_2021':
-        return si_persson2021(x, **kwargs)
-    elif strategy == 'valik_2023':
-        return si_valik2023(x, **kwargs)
-    else:
-        print("ERROR!")
-
-
 def bac_bahp2024(x, bck_bac=2, fwd_bac=2,
                  pathogen_columns=None):
     """Computes bacteremia information.
@@ -303,9 +373,19 @@ def bac_bahp2024(x, bck_bac=2, fwd_bac=2,
 
     Parameters
     ----------
+    x: pd.DataFrame
+        The DataFrame with the information.
+    bck_bac:
+        Backward propagation for bacteremia.
+    fwd_bac:
+        Forward propagation for bacteremia.
+    pathogen_columns:
+        The columns indicating pathogenic microorganisms. This is used to
+        avoid the presence of contaminants to be considered as pathogenic
+        bacteremia.
 
     Returns
-    --------
+    -------
 
     """
     name = 'bac_on_bahp2024'
@@ -323,31 +403,6 @@ def bac_bahp2024(x, bck_bac=2, fwd_bac=2,
 
     # Return
     return pd.concat([bac_onset, bac_window], axis=1)
-
-
-def bacteremia():
-    """Computes bacteremia onset.
-
-    Parameters
-    ----------
-
-    Returns
-    -------
-    """
-    pass
-
-
-
-def bloodstream_infection():
-    """Computes blood stream infection onset.
-
-    Parameters
-    ----------
-
-    Returns
-    -------
-    """
-    pass
 
 
 def bsi_bahp2024(x, bck_abx=0, fwd_abx=24,
@@ -472,58 +527,6 @@ def sep_moor2023(x, delta_sofa=2,
     return pd.concat([si, bsofa, dsofa, sep_wdw, sep_onset, sep_prop], axis=1)
 
 
-def sepsis(x, delta_sofa=2, prop=None):
-    """Computes sepsis onset.
-
-    .. note: Sepsis onset defined as increase in sofa > 2
-             and suspicion of infection.
-
-    SEPSIS-1: SIRS
-    SEPSIS-2: SIRS + SI
-    SEPSIS-3: SOFA + SI
-
-    Possible elements to define sepsis:
-       - ICD-10: codes
-       - ICD-9: 995.91 (sepsis) | 995.92 (severe sepsis) | 785.52 (septic shock)
-       - delta_sofa > 2 and suspected infection
-       -
-
-    SI: Suspected Infection
-
-    Parameters
-    ----------
-    x: pd.DataFrame
-        The DataFrame with the information.
-    delta_sofa: number
-        The increase in consecutive sofas.
-    prop: tuple
-        The propagation
-
-    Returns
-    -------
-    """
-    # Libraries
-    import pandas as pd
-    import numpy as np
-
-    # Basic checks
-    if not 'sofa' in x or not 'si':
-        print("Raise warning!")
-
-    # Compute delta sofa.
-    dsofa = pd.Series(x.sofa.diff(), name='dsofa')
-    # Compute sepsis onset
-    onset = pd.Series(np.nan, index=x.index, name='sep_onset')
-    onset[(dsofa >= delta_sofa) & x.si] = 1
-    # Compute propagation
-    if prop is not None:
-        extnd = propagate(onset, prop[0], prop[1])
-        return pd.concat([dsofa, onset, extnd], axis=1)
-    # Return
-    return pd.concat([dsofa, onset], axis=1)
-
-
-
 
 def pf_ratio(pao2, fio2):
     """Computes the fraction of inspired oxygen.
@@ -557,8 +560,11 @@ def scale_data(a, b):
 """
 
 
-def reshape(data, by, features, labels, sort=False):
+def reshape(data, by, features, labels, n_steps=7, sort=False):
     """Reshape data for ... ????
+
+    .. note: Remove the fillna or request theuser to do it.
+    .. note: Same for the max()  it is assuming boolean...
 
     .. note: Sort features and labels.Thus, if the same values are
              passed the results would be the same independent of the
@@ -574,7 +580,6 @@ def reshape(data, by, features, labels, sort=False):
     # Get sizes
     n_samples = len(data.groupby(by))
     n_steps = int(len(data) / len(data.groupby(by)))
-    n_steps = 7
     n_features = len(features)
 
     # Sort variables
@@ -631,8 +636,8 @@ if __name__ == '__main__':
     import pandas as pd
 
     RUN_MANUAL = False
-    RUN_TEST = True
-    RUN_DATA = False
+    RUN_TEST = False
+    RUN_DATA = True
 
 
     if RUN_MANUAL:
@@ -964,17 +969,27 @@ if __name__ == '__main__':
         DEBUG = True
 
         # Columns to visualise from loaded data.
-        cols = ['stay_id', 'stay_time', 'abx', 'samp', 'sofa']
+        cols = ['stay_id', 'stay_time', 'abx', 'samp', 'sofa', 'bsofa']
 
         # .. note: Use this variable to filter patients for which
         #          it would be interesting to review whether the
         #          computation of si, bac, bsi and sep is right.
 
         # Interesting ids
-        stay_ids = [
-            #3046540
-            201006
-        ]
+        #stay_ids = [
+        #    #3046540
+        #    #201006
+        #    299967,
+        #    200009
+        #]
+
+
+        #cs3t = pd.read_parquet(DATAPATH / 'mimic_0.5.6_cs3t.parquet')
+        #cs3t = cs3t[cs3t.icustay_id.isin(stay_ids)]
+        #print(cs3t)
+
+        #import sys
+        #sys.exit()
 
         # Original data sets (export_data function)
         db = 'eicu_demo_0.5.6.parquet'
@@ -1004,7 +1019,7 @@ if __name__ == '__main__':
         db = 'eicu_demo_0.5.6_cs3t.parquet'
 
 
-        src = 'mimic_demo'
+        src = 'mimic'
 
         # Load merged
         db = '%s_0.5.6_mgd.parquet' % src
@@ -1101,7 +1116,7 @@ if __name__ == '__main__':
         print("\nCount:")
         print(si.sum(axis=0))
         print("\nWith onset:")
-        print(si[si.si_ons_moor2023 == True])
+        print(si[si.si_on_moor2023 == True])
 
         # ------------
         # sep_moor2023
@@ -1116,14 +1131,14 @@ if __name__ == '__main__':
         aux = pd.concat([df, bac, sep], axis=1)
 
         print("\nResult:")
-        print(aux)
+        print(aux[cols])
         print("\nCount:")
         print(sep.sum(axis=0))
         print("\nWith onset:")
         print(aux[aux.sep_on_moor2023 == True])
 
         # Save
-        #aux.to_parquet(DATAPATH / ('%s_0.5.6_lbl.parquet' % src))
+        aux.to_parquet(DATAPATH / ('%s_0.5.6_lbl.parquet' % src))
 
 
     import sys

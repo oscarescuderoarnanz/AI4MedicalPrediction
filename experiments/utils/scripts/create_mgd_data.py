@@ -35,7 +35,7 @@ rename = {
     'chartdate': 'stay_time'
 }
 
-src = 'miiv_0.5.6'
+src = 'mimic_0.5.6'
 
 db1 = '%s_raw.parquet' % src
 db2 = '%s_cs3t.parquet' % src
